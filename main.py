@@ -38,6 +38,7 @@ dict_registros = dict()
 
 proximo_id = 1
 
+"""
 {
     1: {
         "motivacao": "realização de reparo de bomba e bicos injetores da Fiat Strada por solicitação do supervisor de manutenção",
@@ -55,12 +56,17 @@ proximo_id = 1
             "email": "joaodobico@gmail.com",
         },
         "nota_fiscal": False,
+    },
+    2: {
+
     }
 }
+"""
 
 def criar_registro(motivacao, valor, data_aquisicao, data_vencimento, fornecedor, nota_fiscal):
     global proximo_id
     dict_registros[proximo_id] = {
+        "id": proximo_id,
         "motivacao": motivacao,
         "valor": valor,
         "data_aquisicao": data_aquisicao,
@@ -71,8 +77,10 @@ def criar_registro(motivacao, valor, data_aquisicao, data_vencimento, fornecedor
     }
     proximo_id += 1
 
-def obter_registro():
-    ...
+def obter_registros(id_registro):
+    return [
+        dict_registros[id_registro],
+    ]
 
 def atualizar_registro():
     ...
@@ -121,7 +129,29 @@ def menu_principal():
             else:
                 input("Operação cancelada, pressione enter para voltar ao menu.")
         elif opcao == "2":
-            print(dict_registros)
+            for k,v in dict_registros.items():
+                print(k, v)
+            input("Pressione enter para voltar ao menu.")
+        elif opcao == "3":
+            id_registro = input("Digite o ID do Registro que deseja consultar: ")
+            if not id_registro.isnumeric():
+                input("Operação cancelada, digite um ID numérico (int).\nPressione enter para continuar.")
+                continue
+            list_registros = obter_registros(int(id_registro))
+            print(f"Foram encontrados {len(list_registros)} Registros")
+            for reg in list_registros:
+                print(f"""Registro ID {reg["id"]}:
+                    {reg["motivacao"]=}
+                    {reg["valor"]=}
+                    {reg["data_aquisicao"]=}
+                    {reg["data_vencimento"]=}
+                    {reg["data_pagamento"]=}
+                    {reg["fornecedor"]["nome_ou_razao_social"]=}
+                    {reg["fornecedor"]["cpf_ou_cnpj"]=}
+                    {reg["fornecedor"]["dados_bancarios"]["chave_pix"]=}
+                    {reg["fornecedor"]["telefone"]=}
+                    {reg["fornecedor"]["email"]=}
+                    {reg["nota_fiscal"]=}""")
             input("Pressione enter para voltar ao menu.")
         elif opcao == "6":
             if input("Tem certeza que deseja sair?").strip().lower() in ("s", "sim"):
@@ -139,6 +169,4 @@ if __name__ == "__main__":
 
     # Menu principal
     menu_principal()
-
-
 
