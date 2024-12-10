@@ -11,6 +11,8 @@ Registro de ordem de compra - comunicação interdepartamental
 - tem nota fiscal? (bool)
 
 """
+import json
+
 
 list_usuarios = [
     ("lucas", "12345"),
@@ -23,10 +25,14 @@ Selecione a opção abaixo:
 1 - Criar novo Registro
 2 - Listar todos os Registros
 3 - Obter detalhes de um Registro
-4 - Atualizar Registro existente
-5 - Remover Registro
-6 - Sair do programa
+4 - Remover Registro
+5 - Atualizar Registro existente
+6 - Salvar base de dados
+7 - Importar base de dados
+8 - Sair do programa
 """
+
+ARQUIVO_BASE_JSON = "base_registros.json"
 
 # CRUD
 # Create
@@ -36,7 +42,6 @@ Selecione a opção abaixo:
 
 dict_registros = dict()
 
-proximo_id = 1
 
 """
 {
@@ -59,12 +64,20 @@ proximo_id = 1
     },
     2: {
 
-    }
+    },
+    3: {
+
+    },
+    4: {
+
+    },
 }
 """
+def confirma(msg):
+    return input(msg).strip().lower() in ("s", "sim")
 
 def criar_registro(motivacao, valor, data_aquisicao, data_vencimento, fornecedor, nota_fiscal):
-    global proximo_id
+    proximo_id = (max(dict_registros.keys()) + 1) if dict_registros else 1
     dict_registros[proximo_id] = {
         "id": proximo_id,
         "motivacao": motivacao,
@@ -75,19 +88,27 @@ def criar_registro(motivacao, valor, data_aquisicao, data_vencimento, fornecedor
         "fornecedor": fornecedor,
         "nota_fiscal": nota_fiscal,
     }
-    proximo_id += 1
 
 def obter_registros(id_registro):
     return [
         dict_registros[id_registro],
     ]
 
+def remover_registro(id_registro):
+    dict_registros.pop(int(id_registro))
+
 def atualizar_registro():
     ...
 
-def remover_registro():
-    ...
+def salvar_base_json(nome_arquivo):
+    dados_json = json.dumps(dict_registros)
+    with open(nome_arquivo, "w") as f:
+        f.write(dados_json)
 
+def carregar_base_json(nome_arquivo):
+    with open(nome_arquivo, "r") as f:
+        dict_registros.clear()
+        dict_registros.update(json.loads(f.read()))
 
 def menu_principal():
     while True:
@@ -103,8 +124,8 @@ def menu_principal():
             chave_pix = input("Digite chave_pix do fornecedor do Registro")
             telefone = input("Digite telefone do fornecedor do Registro")
             email = input("Digite email do fornecedor do Registro")
-            nota_fiscal = input("O Registro possui nota fiscal? (s/n)").strip().lower() in ("s", "sim")
-            confere = input(f"""Conferência dos dados:
+            nota_fiscal = confirma("O Registro possui nota fiscal? (s/n)")
+            confere = confirma(f"""Conferência dos dados:
                 {motivacao=}
                 {valor=}
                 {data_aquisicao=}
@@ -115,7 +136,7 @@ def menu_principal():
                 {telefone=}
                 {email=}
                 {nota_fiscal=}
-            Os dados conferem? (s/n) """).strip().lower() in ("s", "sim")
+            Os dados conferem? (s/n) """)
             fornecedor = {
                 "nome_ou_razao_social": nome_fornecedor,
                 "cpf_ou_cnpj": cpf_ou_cnpj,
@@ -125,13 +146,12 @@ def menu_principal():
             }
             if confere:
                 criar_registro(motivacao, valor, data_aquisicao, data_vencimento, fornecedor, nota_fiscal)
-                input("Registro criado com sucesso! Pressione enter para voltar ao menu.")
+                print("Registro criado com sucesso!")
             else:
-                input("Operação cancelada, pressione enter para voltar ao menu.")
+                print("Operação cancelada")
         elif opcao == "2":
             for k,v in dict_registros.items():
                 print(k, v)
-            input("Pressione enter para voltar ao menu.")
         elif opcao == "3":
             id_registro = input("Digite o ID do Registro que deseja consultar: ")
             if not id_registro.isnumeric():
@@ -152,21 +172,46 @@ def menu_principal():
                     {reg["fornecedor"]["telefone"]=}
                     {reg["fornecedor"]["email"]=}
                     {reg["nota_fiscal"]=}""")
-            input("Pressione enter para voltar ao menu.")
+        elif opcao == "4":
+            id_registro = input("Digite o ID do Registro que deseja remover: ")
+            registros = obter_registros(int(id_registro))
+            if not registros:
+                print(f"Não foi encontrado registro com o ID {id_registro}.")
+                continue
+            remover_registro(int(id_registro))
+        elif opcao == "5":
+            print("Ainda não implementado")
         elif opcao == "6":
+            nome_arquivo = input(f"Digite o nome do arquivo para salvar a base ou pressione enter para utilizar valor padrão ({ARQUIVO_BASE_JSON})") or ARQUIVO_BASE_JSON
+            salvar_base_json(nome_arquivo)
+            print("Base salva com sucesso!")
+        elif opcao == "7":
+            nome_arquivo = input(f"Digite o nome do arquivo para carregar a base ou pressione enter para utilizar valor padrão ({ARQUIVO_BASE_JSON})") or ARQUIVO_BASE_JSON
+            if confirma("Tem certeza que deseja carregar a base? Isso irá sobrescrever as alterações atuais! (s/n)"):
+                carregar_base_json(nome_arquivo)
+                print("Base carregada com sucesso!")
+            else:
+                print("Operação cancelada")
+        elif opcao == "8":
             if input("Tem certeza que deseja sair?").strip().lower() in ("s", "sim"):
                 break
+        input("Pressione enter para voltar ao menu.")
+
+def login():
+    usuario = input("Digite o seu login: ")
+    senha = input("Digite a sua senha: ")
+    if (usuario, senha) not in list_usuarios:
+        return False
+    return True
 
 
 if __name__ == "__main__":
     # Autenticar usuario com login e senha
-    usuario = input("Digite o seu login: ")
-    senha = input("Digite a sua senha: ")
-    if (usuario, senha) not in list_usuarios:
+    if login():
+        # Menu principal
+        print("Login bem sucedido!")
+        menu_principal()
+    else:
         print("Usuario ou senha incorretos!")
-        exit(1)
-    print("Login bem sucedido!")
-
-    # Menu principal
-    menu_principal()
+    
 
